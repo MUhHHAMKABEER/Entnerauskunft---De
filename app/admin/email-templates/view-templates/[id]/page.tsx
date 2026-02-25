@@ -137,11 +137,10 @@ export default function ViewTemplatePage() {
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Status</p>
               <span
-                className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                  template.status === "Active"
+                className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${template.status === "Active"
                     ? "bg-green-100 text-green-800"
                     : "bg-yellow-100 text-yellow-800"
-                }`}
+                  }`}
               >
                 {template.status === "Active" ? "Aktiv" : "Entwurf"}
               </span>

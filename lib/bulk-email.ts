@@ -35,7 +35,6 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
     };
 
     const fromEmail = 'muhammadkabeerxhb@gmail.com'; // Verified Sender
-    const testToEmail = 'muhammadkabeerxhb@gmail.com'; // All test emails go here
 
     for (const id of ids) {
         try {
@@ -73,10 +72,17 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
                 body = body.replace(regex, val);
             });
 
-            log(`📤 Sending email to ${testToEmail} (Customer: ${anfrage.vorname} ${anfrage.familienname}, ID: ${id})...`);
+            const recipientEmail = anfrage.email || '';
+            if (!recipientEmail) {
+                log(`⚠️ Warning: No email address found for customer ${anfrage.vorname} ${anfrage.familienname}, ID: ${id}`);
+                results.failed++;
+                continue;
+            }
+
+            log(`📤 Sending email to ${recipientEmail} (Customer: ${anfrage.vorname} ${anfrage.familienname}, ID: ${id})...`);
 
             const msg = {
-                to: testToEmail,
+                to: recipientEmail,
                 from: fromEmail,
                 subject: subject,
                 html: body.replace(/\n/g, '<br>'),
@@ -89,7 +95,7 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
             db.prepare(`
                 INSERT INTO email_logs (anfrage_id, template_id, subject, recipient, status)
                 VALUES (?, ?, ?, ?, ?)
-            `).run(id, templateId, subject, testToEmail, 'sent');
+            `).run(id, templateId, subject, recipientEmail, 'sent');
 
             // 2. Update anfragen table with last reminder info
             db.prepare(`

@@ -26,7 +26,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/auth/check');
       const data = await res.json();
-      
+
       if (!data.isLoggedIn) {
         router.push('/admin/login');
       } else {
@@ -41,7 +41,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/admin/stats');
       const data = await res.json();
-      
+
       if (data.success) {
         setStats(data.data);
       }
@@ -125,16 +125,14 @@ export default function DashboardPage() {
           {stats.statusStats.map((stat) => (
             <div key={stat.status} className="bg-white rounded-xl border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  stat.status === 'neu' ? 'bg-blue-100' :
-                  stat.status === 'in_bearbeitung' ? 'bg-yellow-100' :
-                  'bg-green-100'
-                }`}>
-                  <svg className={`w-6 h-6 ${
-                    stat.status === 'neu' ? 'text-blue-600' :
-                    stat.status === 'in_bearbeitung' ? 'text-yellow-600' :
-                    'text-green-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.status === 'neu' ? 'bg-blue-100' :
+                    stat.status === 'in_bearbeitung' ? 'bg-yellow-100' :
+                      'bg-green-100'
+                  }`}>
+                  <svg className={`w-6 h-6 ${stat.status === 'neu' ? 'text-blue-600' :
+                      stat.status === 'in_bearbeitung' ? 'text-yellow-600' :
+                        'text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -211,7 +209,7 @@ export default function DashboardPage() {
               E-Mail Vorlagen
             </h3>
             <p className="text-sm text-slate-600">
-              Create and manage customizable email templates
+              Erstellen und verwalten Sie anpassbare E-Mail-Vorlagen
             </p>
           </button>
         </div>
@@ -240,11 +238,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    anfrage.status === 'neu' ? 'bg-blue-100 text-blue-700' :
-                    anfrage.status === 'in_bearbeitung' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${anfrage.status === 'neu' ? 'bg-blue-100 text-blue-700' :
+                      anfrage.status === 'in_bearbeitung' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                    }`}>
                     {anfrage.status}
                   </span>
                   <span className="text-sm text-slate-500">

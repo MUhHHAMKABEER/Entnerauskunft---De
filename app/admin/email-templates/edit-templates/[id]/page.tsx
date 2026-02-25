@@ -126,14 +126,14 @@ export default function EditTemplatePage() {
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Edit Email Template</h1>
-            <p className="text-sm text-slate-500">Edit the subject and message, then save your changes.</p>
+            <h1 className="text-xl font-bold text-slate-900">E-Mail-Vorlage bearbeiten</h1>
+            <p className="text-sm text-slate-500">Bearbeiten Sie den Betreff und die Nachricht und speichern Sie dann Ihre Änderungen.</p>
           </div>
           <Link
             href="/admin/email-templates"
             className="text-slate-600 hover:text-slate-900 font-medium"
           >
-            Back
+            Zurück
           </Link>
         </div>
       </header>
@@ -145,7 +145,7 @@ export default function EditTemplatePage() {
           <div className="space-y-6">
             {/* Placeholders Section */}
             <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="text-slate-600 text-sm mb-3">Placeholders you can keep:</h3>
+              <h3 className="text-slate-600 text-sm mb-3">Platzhalter, die Sie verwenden können:</h3>
               <ul className="space-y-1.5 text-sm text-slate-700">
                 {PLACEHOLDERS.map((p, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -159,7 +159,7 @@ export default function EditTemplatePage() {
             {/* Current Subject Preview */}
             {subject && (
               <div className="bg-blue-50 rounded-xl border border-blue-200 p-5">
-                <h3 className="font-semibold text-blue-800 text-sm mb-2">Current subject:</h3>
+                <h3 className="font-semibold text-blue-800 text-sm mb-2">Aktueller Betreff:</h3>
                 <p className="text-blue-900 text-sm">{subject}</p>
               </div>
             )}
@@ -176,14 +176,14 @@ export default function EditTemplatePage() {
             {/* Template Name */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Template Name
+                Vorlagen-Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                placeholder="e.g. Zahlungserinnerung"
+                placeholder="z.B. Zahlungserinnerung"
                 required
               />
             </div>
@@ -197,24 +197,22 @@ export default function EditTemplatePage() {
                 <button
                   type="button"
                   onClick={() => setStatus("Draft")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    status === "Draft"
-                      ? "bg-slate-100 border-slate-300 text-slate-900"
-                      : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${status === "Draft"
+                    ? "bg-slate-100 border-slate-300 text-slate-900"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
                 >
-                  Draft
+                  Entwurf
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatus("Active")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    status === "Active"
-                      ? "bg-blue-100 border-blue-300 text-blue-900"
-                      : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${status === "Active"
+                    ? "bg-blue-100 border-blue-300 text-blue-900"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                    }`}
                 >
-                  Active
+                  Aktiv
                 </button>
               </div>
             </div>
@@ -222,14 +220,14 @@ export default function EditTemplatePage() {
             {/* Template Type */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Template type
+                Vorlagen-Typ
               </label>
               <select
                 value={templateType}
                 onChange={(e) => setTemplateType(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               >
-                <option value="">-- Select type --</option>
+                <option value="">-- Typ wählen --</option>
                 {TEMPLATE_TYPE_OPTIONS.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -242,14 +240,14 @@ export default function EditTemplatePage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-sm font-medium text-slate-700">
-                  Subject
+                  Betreff
                 </label>
                 <button
                   type="button"
                   onClick={copySubject}
                   className="text-xs text-blue-600 hover:text-blue-800"
                 >
-                  {copiedSubject ? "Copied!" : "Copy Text"}
+                  {copiedSubject ? "Kopiert!" : "Text kopieren"}
                 </button>
               </div>
               <input
@@ -257,7 +255,7 @@ export default function EditTemplatePage() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                placeholder="Email subject line"
+                placeholder="Betreffzeile der E-Mail"
                 required
               />
             </div>
@@ -265,11 +263,11 @@ export default function EditTemplatePage() {
             {/* Email Text */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Email Text
+                E-Mail-Text
               </label>
               <EmailBodyEditor value={body} onChange={setBody} />
               <p className="text-xs text-slate-500 mt-2">
-                Tip: keep placeholders like [XXX] and replace them when sending.
+                Tipp: Behalten Sie die Platzhalter wie [VORNAME], [NACHNAME] etc. bei, damit diese beim Senden automatisch ersetzt werden.
               </p>
             </div>
 
@@ -279,14 +277,14 @@ export default function EditTemplatePage() {
                 href="/admin/email-templates"
                 className="px-5 py-2.5 text-slate-600 hover:text-slate-900 font-medium rounded-lg hover:bg-slate-100 transition-colors"
               >
-                Cancel
+                Abbrechen
               </Link>
               <button
                 type="submit"
                 disabled={saving}
                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? "Wird gespeichert..." : "Änderungen speichern"}
               </button>
             </div>
           </form>
