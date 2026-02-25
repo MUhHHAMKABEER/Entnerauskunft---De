@@ -1,0 +1,42 @@
+{
+  "name": "rentenauskunft",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/pdfkit": "^0.17.4",
+    "autoprefixer": "^10.4.22",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.7.0",
+    "geoip-lite": "^1.4.10",
+    "iron-session": "^8.0.3",
+    "next": "16.0.10",
+    "nodemailer": "^7.0.11",
+    "pdfkit": "^0.17.2",
+    "postcss": "^8.5.6",
+    "puppeteer": "^24.31.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5",
+    "ua-parser-js": "^1.0.41"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/geoip-lite": "^1.4.4",
+    "@types/node": "^20",
+    "@types/nodemailer": "^7.0.4",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/ua-parser-js": "^0.7.39",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.5"
+  }
+}

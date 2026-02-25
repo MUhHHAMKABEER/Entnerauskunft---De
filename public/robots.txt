@@ -1,0 +1,33 @@
+# robots.txt für rentnerauskunft.de
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://rentnerauskunft.de/sitemap.xml
+
+# Crawl-Delay für höfliches Crawling
+Crawl-delay: 1
+
+# Spezifische Bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Blockiere bekannte Bad Bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

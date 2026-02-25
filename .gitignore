@@ -1,0 +1,13 @@
+data/
+node_modules
+.next
+.next.backup
+*.db
+*.log
+*.tar.gz
+ds_store
+.env
+.env.local
+.cache
+dist
+build

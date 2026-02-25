@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "deploy": "bash deploy.sh",
+    "start": "next start -p 3005",
+    "logs": "journalctl -u rentenauskunft -f",
+    "restart": "sudo systemctl restart rentenauskunft",
+    "status": "sudo systemctl status rentenauskunft"
+  }
+}
