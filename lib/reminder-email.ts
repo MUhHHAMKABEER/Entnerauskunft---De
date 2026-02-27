@@ -188,7 +188,7 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<void> 
 
     const info = await transporter.sendMail({
       from: '"Rentnerauskunft.de" <info@rentnerauskunft.de>',
-      to: 'muhammadkabeerxhb@gmail.com',
+      to: data.customerEmail,
       subject: emailSubject,
       html: htmlContent,
       attachments: [

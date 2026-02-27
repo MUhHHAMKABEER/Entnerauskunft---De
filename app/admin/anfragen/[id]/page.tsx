@@ -63,6 +63,8 @@ interface EmailLog {
   sent_at: string;
   recipient: string;
   status: string;
+  milestone_step?: number | null;
+  milestone_day?: number | null;
 }
 
 interface Mahnung {
@@ -117,11 +119,27 @@ export default function AnfrageDetailPage() {
 
     return anfrage.email_logs.map(log => {
       const date = new Date(log.sent_at);
+
+      let category = 'all';
+      const day = log.milestone_day;
+      if (typeof day === 'number') {
+        if (day === 3 || day === 6) category = 'friendly';
+        else if (day === 8 || day === 10 || day === 13) category = 'overdue';
+        else if (day === 15 || day === 17 || day === 20) category = '1st_mahnung';
+        else if (day === 22 || day === 24 || day === 27) category = 'final_mahnung';
+      } else {
+        const subject = (log.subject || '').toLowerCase();
+        if (subject.includes('freundliche erinnerung')) category = 'friendly';
+        else if (subject.includes('zahlung überfällig') || subject.includes('zahlung ueberfaellig')) category = 'overdue';
+        else if (subject.includes('letzte mahnung')) category = 'final_mahnung';
+        else if (subject.includes('1. mahnung') || subject.includes('1 mahnung') || subject.includes('erste mahnung')) category = '1st_mahnung';
+      }
+
       return {
         title: log.subject,
         date: date.toLocaleDateString('de-DE'),
         time: date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-        category: 'sent'
+        category
       };
     });
   };

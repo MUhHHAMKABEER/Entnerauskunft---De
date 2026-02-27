@@ -3,7 +3,7 @@ node_modules
 .next
 .next.backup
 
-
+data/
 *.tar.gz
 ds_store
 .env

@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     const paymentStatus = searchParams.get('paymentStatus');
     const reminderStatus = searchParams.get('reminderStatus');
     const reminderSubStatus = searchParams.get('reminderSubStatus');
+    const due = searchParams.get('due');
+    const customDate = searchParams.get('customDate');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -27,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Tage seit Erstellung (nur für unbezahlte Anfragen relevant)
     const daysSinceExpr = "cast((strftime('%s','now') - strftime('%s', erstellt_am)) / 86400 as integer)";
+    const daysSinceRealExpr = "((strftime('%s','now') - strftime('%s', erstellt_am)) / 86400.0)";
 
     // SQL-Query bauen (WHERE-Bedingungen für beide Abfragen)
     let whereClause = 'WHERE 1=1';
@@ -49,19 +52,61 @@ export async function GET(request: NextRequest) {
 
     // EffectiveStep: Depends on age (BaseStep) + Emails Sent (LogCount)
     // 0-3d: Step 0 (New)
-    // 3-6d: Step 1 (Friendly V1 Start)
-    // 6-12d: Step 3 (Overdue V1 Start)
-    // 12-18d: Step 6 (Mahnung V1 Start)
-    // 18d+: Step 9 (Final V1 Start)
+    // 3-8d: Step 1 (Friendly V1 Start)
+    // 8-15d: Step 3 (Overdue V1 Start)
+    // 15-22d: Step 6 (Mahnung V1 Start)
+    // 22d+: Step 9 (Final V1 Start)
     const effectiveStepExpr = `(
       CASE 
         WHEN ${daysSinceExpr} < 3 THEN 0
-        WHEN ${daysSinceExpr} < 6 THEN 1
-        WHEN ${daysSinceExpr} < 12 THEN 3
-        WHEN ${daysSinceExpr} < 18 THEN 6
+        WHEN ${daysSinceExpr} < 8 THEN 1
+        WHEN ${daysSinceExpr} < 15 THEN 3
+        WHEN ${daysSinceExpr} < 22 THEN 6
         ELSE 9
       END + ${logCountExpr}
     )`;
+
+    // Next milestone day for the *next* email step (mirrors milestones array in app/admin/anfragen/page.tsx)
+    const nextMilestoneDayExpr = `(
+      CASE 
+        WHEN ${effectiveStepExpr} = 0 THEN 3
+        WHEN ${effectiveStepExpr} = 1 THEN 6
+        WHEN ${effectiveStepExpr} = 2 THEN 8
+        WHEN ${effectiveStepExpr} = 3 THEN 10
+        WHEN ${effectiveStepExpr} = 4 THEN 13
+        WHEN ${effectiveStepExpr} = 5 THEN 15
+        WHEN ${effectiveStepExpr} = 6 THEN 17
+        WHEN ${effectiveStepExpr} = 7 THEN 20
+        WHEN ${effectiveStepExpr} = 8 THEN 22
+        WHEN ${effectiveStepExpr} = 9 THEN 24
+        WHEN ${effectiveStepExpr} = 10 THEN 27
+        ELSE NULL
+      END
+    )`;
+
+    // Next milestone date (YYYY-MM-DD) derived from erstellt_am + nextMilestoneDay
+    // Uses julianday arithmetic so fractional days (e.g. 4.5) land on the correct calendar date.
+    const nextMilestoneDateExpr = `(date(julianday(erstellt_am) + ${nextMilestoneDayExpr}))`;
+
+    if (customDate) {
+      // Custom date filtering should show only unpaid inquiries whose next milestone falls on that date
+      whereClause += ' AND payment_date IS NULL';
+      whereClause += ` AND ${nextMilestoneDayExpr} IS NOT NULL AND ${nextMilestoneDateExpr} = date(?)`;
+      whereParams.push(customDate);
+    } else if (due && due !== 'alle') {
+      // Due is only relevant for unpaid inquiries (otherwise there is no next email milestone)
+      whereClause += ' AND payment_date IS NULL';
+
+      // Difference between next milestone day and current age in days
+      const dueDeltaExpr = `(${nextMilestoneDayExpr} - ${daysSinceRealExpr})`;
+
+      if (due === 'today') {
+        // Due within the next 24h window (including fractional milestones like 4.5 days)
+        whereClause += ` AND ${nextMilestoneDayExpr} IS NOT NULL AND ${dueDeltaExpr} >= 0 AND ${dueDeltaExpr} < 1`;
+      } else if (due === 'tomorrow') {
+        whereClause += ` AND ${nextMilestoneDayExpr} IS NOT NULL AND ${dueDeltaExpr} >= 1 AND ${dueDeltaExpr} < 2`;
+      }
+    }
 
     if (reminderStatus && reminderStatus !== 'alle') {
       whereClause += ' AND payment_date IS NULL';
@@ -107,8 +152,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const lastEmailSubjectExpr = "(SELECT subject FROM email_logs WHERE anfrage_id = anfragen.id ORDER BY sent_at DESC LIMIT 1)";
+    const lastEmailSentAtExpr = "(SELECT sent_at FROM email_logs WHERE anfrage_id = anfragen.id ORDER BY sent_at DESC LIMIT 1)";
+
     const query = `
-      SELECT *, ${logCountExpr} as email_log_count 
+      SELECT *,
+        ${logCountExpr} as email_log_count,
+        ${lastEmailSubjectExpr} as last_email_subject,
+        ${lastEmailSentAtExpr} as last_email_sent_at
       FROM anfragen 
       ${whereClause} 
       ORDER BY erstellt_am DESC 

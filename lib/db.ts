@@ -2,8 +2,8 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-const dbDir = path.join(process.cwd(), 'data');
-const dbPath = path.join(dbDir, 'rentenauskunft.db');
+const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'data', 'rentenauskunft.db');
+const dbDir = path.dirname(dbPath);
 
 // Erstelle data Verzeichnis falls nicht vorhanden
 if (!fs.existsSync(dbDir)) {
@@ -203,6 +203,18 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_email_logs_anfrage_id ON email_logs(anfrage_id);
   CREATE INDEX IF NOT EXISTS idx_email_logs_sent_at ON email_logs(sent_at);
 `);
+try {
+  const emailLogColumns = db.prepare(`PRAGMA table_info(email_logs)`).all() as { name: string }[];
+  const emailLogColumnSet = new Set(emailLogColumns.map((c) => c.name));
+
+  if (!emailLogColumnSet.has('milestone_step')) {
+    db.exec(`ALTER TABLE email_logs ADD COLUMN milestone_step INTEGER`);
+  }
+  if (!emailLogColumnSet.has('milestone_day')) {
+    db.exec(`ALTER TABLE email_logs ADD COLUMN milestone_day REAL`);
+  }
+} catch (e) {
+}
 
 export default db;
 

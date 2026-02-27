@@ -1,36 +1,4 @@
-[2026-02-25T16:02:05.541Z] 🚀 Starting bulk send for 1 recipients using template 6
-[2026-02-25T16:02:05.543Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Muhammad Kabeer, ID: 1169)...
-[2026-02-25T16:02:08.380Z] ✅ SendGrid Success! ID 1169 Status: 202
-[2026-02-25T16:02:08.384Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T16:05:00.879Z] 🚀 Starting bulk send for 3 recipients using template 8
-[2026-02-25T16:05:00.881Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jessica Yvonne CHmelik, ID: 1168)...
-[2026-02-25T16:05:02.307Z] ✅ SendGrid Success! ID 1168 Status: 202
-[2026-02-25T16:05:02.344Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Ralf Böhmer, ID: 1167)...
-[2026-02-25T16:05:02.528Z] ✅ SendGrid Success! ID 1167 Status: 202
-[2026-02-25T16:05:02.532Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jot Lot, ID: 1166)...
-[2026-02-25T16:05:02.712Z] ✅ SendGrid Success! ID 1166 Status: 202
-[2026-02-25T16:05:02.714Z] 🏁 Finished bulk send. Results: 3 success, 0 failed.
-[2026-02-25T16:06:23.378Z] 🚀 Starting bulk send for 1 recipients using template 10
-[2026-02-25T16:06:23.381Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jessica Yvonne CHmelik, ID: 1168)...
-[2026-02-25T16:06:25.534Z] ✅ SendGrid Success! ID 1168 Status: 202
-[2026-02-25T16:06:25.570Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T16:07:47.653Z] 🚀 Starting bulk send for 1 recipients using template 7
-[2026-02-25T16:07:47.654Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jessica Yvonne CHmelik, ID: 1168)...
-[2026-02-25T16:07:50.728Z] ✅ SendGrid Success! ID 1168 Status: 202
-[2026-02-25T16:07:50.732Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T16:08:28.531Z] 🚀 Starting bulk send for 1 recipients using template 7
-[2026-02-25T16:08:28.533Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jessica Yvonne CHmelik, ID: 1168)...
-[2026-02-25T16:08:29.716Z] ✅ SendGrid Success! ID 1168 Status: 202
-[2026-02-25T16:08:29.721Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T16:17:39.561Z] 🚀 Starting bulk send for 1 recipients using template 7
-[2026-02-25T16:17:39.580Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Jessica Yvonne CHmelik, ID: 1168)...
-[2026-02-25T16:17:41.596Z] ✅ SendGrid Success! ID 1168 Status: 202
-[2026-02-25T16:17:41.599Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T18:02:13.932Z] 🚀 Starting bulk send for 1 recipients using template 10
-[2026-02-25T18:02:13.946Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Muhammad Kabeer, ID: 1169)...
-[2026-02-25T18:02:15.752Z] ✅ SendGrid Success! ID 1169 Status: 202
-[2026-02-25T18:02:15.761Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
-[2026-02-25T18:33:57.471Z] 🚀 Starting bulk send for 1 recipients using template 10
-[2026-02-25T18:33:57.486Z] 📤 Sending email to muhammadkabeerxhb@gmail.com (Customer: Muhammad Kabeer, ID: 1169)...
-[2026-02-25T18:33:59.631Z] ✅ SendGrid Success! ID 1169 Status: 202
-[2026-02-25T18:33:59.636Z] 🏁 Finished bulk send. Results: 1 success, 0 failed.
+[2026-02-27T20:40:38.982Z] 🚀 Starting bulk send for 1 recipients using template 7
+[2026-02-27T20:40:38.984Z] 📤 Sending email to lotlot@gma.com (Customer: Jot Lot, ID: 1166)...
+[2026-02-27T20:40:40.111Z] ❌ Failed to send to ID 1166: Unauthorized | SendGrid Details: {"errors":[{"message":"Maximum credits exceeded","field":null,"help":null}]}
+[2026-02-27T20:40:40.116Z] 🏁 Finished bulk send. Results: 0 success, 1 failed.

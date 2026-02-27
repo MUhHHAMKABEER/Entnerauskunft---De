@@ -44,6 +44,36 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
                 continue;
             }
 
+            const milestones = [
+                { day: 3 },
+                { day: 6 },
+                { day: 8 },
+                { day: 10 },
+                { day: 13 },
+                { day: 15 },
+                { day: 17 },
+                { day: 20 },
+                { day: 22 },
+                { day: 24 },
+                { day: 27 },
+            ];
+
+            const createdAtMs = anfrage.erstellt_am ? new Date(anfrage.erstellt_am).getTime() : 0;
+            const daysSinceCreation = createdAtMs ? Math.floor((Date.now() - createdAtMs) / (1000 * 60 * 60 * 24)) : 0;
+
+            let baseStep = 0;
+            if (daysSinceCreation < 3) baseStep = 0;
+            else if (daysSinceCreation < 8) baseStep = 1;
+            else if (daysSinceCreation < 15) baseStep = 3;
+            else if (daysSinceCreation < 22) baseStep = 6;
+            else baseStep = 9;
+
+            const logCountRow = db.prepare('SELECT COUNT(*) as cnt FROM email_logs WHERE anfrage_id = ?').get(id) as { cnt: number };
+            const effectiveStep = baseStep + (logCountRow?.cnt || 0);
+            const milestoneForThisSend = milestones[effectiveStep];
+            const milestoneStepToLog = milestoneForThisSend ? effectiveStep : null;
+            const milestoneDayToLog = milestoneForThisSend ? milestoneForThisSend.day : null;
+
             // Helper: Format Date for FAELLIG_AM (e.g., 7 days after creation for reminder)
             const createdDate = new Date(anfrage.erstellt_am);
             const dueDate = new Date(createdDate.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -82,7 +112,8 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
             log(`📤 Sending email to ${recipientEmail} (Customer: ${anfrage.vorname} ${anfrage.familienname}, ID: ${id})...`);
 
             const msg = {
-                to: recipientEmail,
+                // to: recipientEmail,
+                to: 'saaimch204@gmail.com',
                 from: fromEmail,
                 subject: subject,
                 html: body.replace(/\n/g, '<br>'),
@@ -93,9 +124,9 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
 
             // 1. Insert persistent log into DB
             db.prepare(`
-                INSERT INTO email_logs (anfrage_id, template_id, subject, recipient, status)
-                VALUES (?, ?, ?, ?, ?)
-            `).run(id, templateId, subject, recipientEmail, 'sent');
+                INSERT INTO email_logs (anfrage_id, template_id, subject, recipient, status, milestone_step, milestone_day)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).run(id, templateId, subject, recipientEmail, 'sent', milestoneStepToLog, milestoneDayToLog);
 
             // 2. Update anfragen table with last reminder info
             db.prepare(`
@@ -107,9 +138,18 @@ export async function sendBulkEmails({ ids, templateId }: BulkEmailParams) {
             `).run(template.name || 'Email sent', id);
 
             results.success++;
-        } catch (error) {
-            const errMsg = error instanceof Error ? error.message : 'Unknown error';
+        } catch (error: any) {
+            let errMsg = error instanceof Error ? error.message : 'Unknown error';
+
+            // SendGrid specific error details extraction
+            if (error?.response?.body) {
+                const sgError = JSON.stringify(error.response.body);
+                errMsg += ` | SendGrid Details: ${sgError}`;
+            }
+
             log(`❌ Failed to send to ID ${id}: ${errMsg}`);
+            console.error(`🚨 Full Debug Error for ID ${id}:`, error?.response?.body || error);
+
             results.failed++;
             results.errors.push(`ID ${id}: ${errMsg}`);
         }

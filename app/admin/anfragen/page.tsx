@@ -18,6 +18,8 @@ interface Anfrage {
   last_reminder_sent?: string;
   last_reminder_at?: string;
   email_log_count?: number;
+  last_email_subject?: string | null;
+  last_email_sent_at?: string | null;
 }
 
 export default function AnfragenPage() {
@@ -29,6 +31,8 @@ export default function AnfragenPage() {
   const [reminderStatus, setReminderStatus] = useState('alle');
   const [reminderSubStatus, setReminderSubStatus] = useState('alle');
   const [selectedTemplateId, setSelectedTemplateId] = useState('alle');
+  const [due, setDue] = useState('');
+  const [customDate, setCustomDate] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -51,6 +55,8 @@ export default function AnfragenPage() {
         paymentStatus,
         reminderStatus,
         reminderSubStatus,
+        ...((paymentStatus !== 'bezahlt' && due && due !== 'custom') ? { due } : {}),
+        ...((paymentStatus !== 'bezahlt' && customDate) ? { customDate } : {}),
         search,
         idsOnly: 'true'
       });
@@ -58,6 +64,9 @@ export default function AnfragenPage() {
       const data = await res.json();
       if (data.success && Array.isArray(data.ids)) {
         setSelectedIds(new Set(data.ids));
+        if (typeof data.total === 'number') {
+          setTotalCount(data.total);
+        }
       }
     } catch (err) {
       console.error('Fehler beim Laden aller IDs:', err);
@@ -78,11 +87,26 @@ export default function AnfragenPage() {
   const allSelected = totalCount > 0 && selectedIds.size === totalCount;
   const someSelected = selectedIds.size > 0;
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (selectAllRef.current) {
       selectAllRef.current.indeterminate = someSelected && !allSelected;
     }
   }, [someSelected, allSelected]);
+
+  useEffect(() => {
+    if (due === 'custom' && dateInputRef.current) {
+      try {
+        if ('showPicker' in HTMLInputElement.prototype) {
+          dateInputRef.current.showPicker();
+        } else {
+          dateInputRef.current.focus();
+        }
+      } catch (e) {
+        dateInputRef.current.focus();
+      }
+    }
+  }, [due]);
 
   useEffect(() => {
     setMounted(true);
@@ -92,11 +116,11 @@ export default function AnfragenPage() {
 
   useEffect(() => {
     loadAnfragen();
-  }, [status, paymentStatus, reminderStatus, reminderSubStatus, search, page]);
+  }, [status, paymentStatus, reminderStatus, reminderSubStatus, due, customDate, search, page]);
 
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [status, paymentStatus, reminderStatus, reminderSubStatus, search]);
+  }, [status, paymentStatus, reminderStatus, reminderSubStatus, due, customDate, search]);
 
   const checkAuth = async () => {
     try {
@@ -172,6 +196,8 @@ export default function AnfragenPage() {
         paymentStatus,
         reminderStatus,
         reminderSubStatus,
+        ...((paymentStatus !== 'bezahlt' && due && due !== 'custom') ? { due } : {}),
+        ...((paymentStatus !== 'bezahlt' && customDate) ? { customDate } : {}),
         search,
         page: page.toString(),
         limit: '20'
@@ -220,8 +246,10 @@ export default function AnfragenPage() {
   const getPaymentStatusInfo = (anfrage: Anfrage): { nextLabel: string; nextInDays: number; lastSent: string | null } | null => {
     if (anfrage.payment_date) return null;
 
-    // 1. Determine Last Sent from DB or fallback to time-based (legacy/initial)
-    const lastSentFromDb = anfrage.last_reminder_sent;
+    // Last Sent should be derived only from email_logs (API provides last email subject + sent_at)
+    const lastSentFromLog = anfrage.last_email_subject
+      ? `${anfrage.last_email_subject}${anfrage.last_email_sent_at ? ` (${new Date(anfrage.last_email_sent_at).toLocaleDateString('de-DE')})` : ''}`
+      : null;
 
     const erstellt = anfrage.erstellt_am ? new Date(anfrage.erstellt_am).getTime() : 0;
     if (!erstellt || isNaN(erstellt)) return null;
@@ -229,24 +257,24 @@ export default function AnfragenPage() {
 
     const milestones = [
       { id: 'f1', day: 3, label: '1. Freundliche Erinnerung' },
-      { id: 'f2', day: 4.5, label: '2. Freundliche Erinnerung' },
-      { id: 'o1', day: 6, label: 'Zahlung überfällig 1.' },
-      { id: 'o2', day: 8, label: 'Zahlung überfällig 2.' },
-      { id: 'o3', day: 10, label: 'Zahlung überfällig 3.' },
-      { id: 'm1', day: 12, label: '1. Mahnung 1.' },
-      { id: 'm2', day: 14, label: '1. Mahnung 2.' },
-      { id: 'm3', day: 16, label: '1. Mahnung 3.' },
-      { id: 'fm1', day: 18, label: 'Letzte Mahnung 1.' },
-      { id: 'fm2', day: 20, label: 'Letzte Mahnung 2.' },
-      { id: 'fm3', day: 22, label: 'Letzte Mahnung 3.' }
+      { id: 'f2', day: 6, label: '2. Freundliche Erinnerung' },
+      { id: 'o1', day: 8, label: 'Zahlung überfällig 1.' },
+      { id: 'o2', day: 10, label: 'Zahlung überfällig 2.' },
+      { id: 'o3', day: 13, label: 'Zahlung überfällig 3.' },
+      { id: 'm1', day: 15, label: '1. Mahnung 1.' },
+      { id: 'm2', day: 17, label: '1. Mahnung 2.' },
+      { id: 'm3', day: 20, label: '1. Mahnung 3.' },
+      { id: 'fm1', day: 22, label: 'Letzte Mahnung 1.' },
+      { id: 'fm2', day: 24, label: 'Letzte Mahnung 2.' },
+      { id: 'fm3', day: 27, label: 'Letzte Mahnung 3.' }
     ];
 
     // Current Step: Starts at age-based floor and advances with each sent email
     let baseStep = 0;
     if (daysSinceCreation < 3) baseStep = 0;
-    else if (daysSinceCreation < 6) baseStep = 1;
-    else if (daysSinceCreation < 12) baseStep = 3;
-    else if (daysSinceCreation < 18) baseStep = 6;
+    else if (daysSinceCreation < 8) baseStep = 1;
+    else if (daysSinceCreation < 15) baseStep = 3;
+    else if (daysSinceCreation < 22) baseStep = 6;
     else baseStep = 9;
 
     const currentStep = baseStep + (anfrage.email_log_count || 0);
@@ -268,7 +296,7 @@ export default function AnfragenPage() {
     return {
       nextLabel,
       nextInDays,
-      lastSent: lastSentFromDb ? `${lastSentFromDb} – versendet` : (lastMilestoneIndex >= 0 ? `${milestones[lastMilestoneIndex].label} – versendet` : null)
+      lastSent: lastSentFromLog
     };
   };
 
@@ -307,20 +335,20 @@ export default function AnfragenPage() {
 
           {/* Filter */}
           <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[200px]">
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Suche nach Name, E-Mail, Versicherungsnummer..."
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none"
+                  className="w-full px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700"
                 />
               </div>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none"
+                className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white"
               >
                 <option value="alle">Alle Status</option>
                 <option value="neu">Neu</option>
@@ -329,25 +357,76 @@ export default function AnfragenPage() {
               </select>
               <select
                 value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none"
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setPaymentStatus(next);
+                  setPage(1);
+                  if (next === 'bezahlt') {
+                    setCustomDate('');
+                    setDue('');
+                  }
+                }}
+                className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white"
               >
                 <option value="alle">Alle Zahlungen</option>
                 <option value="bezahlt">Bezahlt</option>
                 <option value="unbezahlt">Unbezahlt</option>
               </select>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700 whitespace-nowrap">Due:</span>
+                <select
+                  value={due}
+                  onChange={(e) => {
+                    setDue(e.target.value);
+                    setPage(1);
+                    if (e.target.value !== 'custom') {
+                      setCustomDate('');
+                    }
+                  }}
+                  disabled={paymentStatus === 'bezahlt'}
+                  className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white min-w-[120px]"
+                >
+                  <option value="">Search</option>
+                  <option value="today">Heute</option>
+                  <option value="tomorrow">Morgen</option>
+                  <option value="custom">
+                    Benutzerdefiniertes Datum {customDate ? `(${new Date(customDate).toLocaleDateString('de-DE')})` : ''}
+                  </option>
+                </select>
+
+                <div className="relative w-0 h-0 overflow-hidden">
+                  <input
+                    type="date"
+                    ref={dateInputRef}
+                    value={customDate}
+                    onChange={(e) => {
+                      setCustomDate(e.target.value);
+                      if (e.target.value) {
+                        setDue('custom');
+                      } else {
+                        setDue('');
+                      }
+                      setPage(1);
+                    }}
+                    disabled={paymentStatus === 'bezahlt'}
+                    className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-slate-700">Filter nach Zahlungsstatus:</span>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-sm font-medium text-slate-700">Filter by payment status:</span>
               <select
                 value={reminderStatus}
                 onChange={(e) => {
                   setReminderStatus(e.target.value);
                   setReminderSubStatus('alle');
                 }}
-                className="px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none"
+                className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white"
               >
-                <option value="alle">Alle Erinnerungen</option>
+                <option value="alle">All memories</option>
                 <option value="new_signup">Neu angemeldet</option>
                 <option value="friendly_reminder">Freundliche Erinnerung</option>
                 <option value="payment_overdue">Zahlung überfällig (Mahnung)</option>
@@ -359,7 +438,7 @@ export default function AnfragenPage() {
                 <select
                   value={reminderSubStatus}
                   onChange={(e) => setReminderSubStatus(e.target.value)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none animate-in fade-in slide-in-from-left-2 duration-200"
+                  className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white animate-in fade-in slide-in-from-left-2 duration-200"
                 >
                   <option value="alle">Alle Versuche</option>
                   {reminderStatus === 'friendly_reminder' && (
@@ -370,35 +449,35 @@ export default function AnfragenPage() {
                   )}
                   {reminderStatus === 'payment_overdue' && (
                     <>
-                      <option value="versuch_1">1. Versuch (Tag 9)</option>
-                      <option value="versuch_2">2. Versuch (Tag 12)</option>
-                      <option value="versuch_3">3. Versuch (Tag 15)</option>
+                      <option value="versuch_1">1. Versuch (Tag 8)</option>
+                      <option value="versuch_2">2. Versuch (Tag 10)</option>
+                      <option value="versuch_3">3. Versuch (Tag 13)</option>
                     </>
                   )}
                   {reminderStatus === '1st_reminder' && (
                     <>
-                      <option value="versuch_1">1. Versuch (Tag 18)</option>
-                      <option value="versuch_2">2. Versuch (Tag 21)</option>
-                      <option value="versuch_3">3. Versuch (Tag 24)</option>
+                      <option value="versuch_1">1. Versuch (Tag 15)</option>
+                      <option value="versuch_2">2. Versuch (Tag 17)</option>
+                      <option value="versuch_3">3. Versuch (Tag 20)</option>
                     </>
                   )}
                   {reminderStatus === 'final_reminder' && (
                     <>
-                      <option value="versuch_1">1. Versuch (Tag 27)</option>
-                      <option value="versuch_2">2. Versuch (Tag 30)</option>
-                      <option value="versuch_3">3. Versuch (Tag 33)</option>
+                      <option value="versuch_1">1. Versuch (Tag 22)</option>
+                      <option value="versuch_2">2. Versuch (Tag 24)</option>
+                      <option value="versuch_3">3. Versuch (Tag 27)</option>
                     </>
                   )}
                 </select>
               )}
 
-              <span className="text-sm font-medium text-slate-700">Email Vorlage:</span>
+              <span className="text-sm font-medium text-slate-700 ml-auto xl:ml-0 pl-2 border-l border-slate-200 h-6 flex items-center">Email template:</span>
               <select
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="px-4 py-2 rounded-lg border border-slate-300 focus:border-[#083163] focus:ring-2 focus:ring-[#083163]/20 outline-none max-w-[200px]"
+                className="px-4 py-2 text-sm rounded-lg border border-slate-200 focus:border-[#083163] focus:ring-1 focus:ring-[#083163]/20 outline-none text-slate-700 bg-white xl:max-w-[200px]"
               >
-                <option value="alle">Alle Vorlagen</option>
+                <option value="alle">All templates</option>
                 {templates.map(t => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -407,7 +486,7 @@ export default function AnfragenPage() {
               <button
                 onClick={handleBulkSend}
                 disabled={sending || selectedIds.size === 0}
-                className="ml-auto flex items-center gap-2 px-6 py-2 bg-[#083163] text-white rounded-lg font-semibold hover:bg-[#0a3d7a] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px] justify-center"
+                className="ml-auto flex items-center gap-2 px-6 py-2 bg-[#8a9eb3] hover:bg-[#728599] text-white rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-w-[140px] justify-center"
               >
                 {mounted && (
                   <>
@@ -415,13 +494,13 @@ export default function AnfragenPage() {
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     )}
-                    <span>{sending ? 'Wird gesendet...' : 'E-Mail senden'}</span>
+                    <span>{sending ? 'Wird gesendet...' : 'Send email'}</span>
                   </>
                 )}
-                {!mounted && <span>E-Mail senden</span>}
+                {!mounted && <span>Send email</span>}
               </button>
             </div>
           </div>
@@ -570,7 +649,7 @@ export default function AnfragenPage() {
                                       <span className="font-medium text-slate-700">Zuletzt:</span> {info.lastSent}
                                     </>
                                   ) : (
-                                    'Noch keine Erinnerung'
+                                    ''
                                   )}
                                 </p>
                               </div>

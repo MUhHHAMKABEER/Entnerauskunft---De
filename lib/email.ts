@@ -220,7 +220,7 @@ export async function sendConfirmationEmail(data: EmailData): Promise<void> {
     // E-Mail senden
     const info = await transporter.sendMail({
       from: '"Rentnerauskunft.de" <info@rentnerauskunft.de>',
-      to: 'muhammadkabeerxhb@gmail.com',
+      to: data.customerEmail,
       subject: `Ihre Bestellung - Rechnung ${data.invoiceNumber}`,
       html: htmlContent,
       attachments: [
